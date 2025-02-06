@@ -1,14 +1,11 @@
 import os
-
 import allure
-from selene import have
+from selene import have, be
 from selene.api import s
-
 from utils import attach
 
 current_dir = os.path.dirname(__file__)
 file_path = os.path.join(current_dir, 'resources', 'pic.png')
-
 
 def test_registration_form(open_browser):
     browser = open_browser
@@ -20,6 +17,7 @@ def test_registration_form(open_browser):
         browser.open('https://demoqa.com/automation-practice-form')
         browser.execute_script("$('footer').remove()")
         browser.execute_script("$('#fixedban').remove()")
+        browser.execute_script("document.querySelectorAll('iframe').forEach(iframe => iframe.remove())")
         attach.add_screenshot(browser)
         attach.add_logs(browser)
         attach.add_html(browser)
@@ -42,7 +40,7 @@ def test_registration_form(open_browser):
         attach.add_screenshot(browser)
 
     with allure.step('Установить дату рождения'):
-        s('#dateOfBirthInput').click()
+        s('#dateOfBirthInput').should(be.clickable).click()
         s('.react-datepicker__month-select').click().s('[value="2"]').click()
         s('.react-datepicker__year-select').click().s('[value="1960"]').click()
         s('.react-datepicker__day--003:not(.react-datepicker__day--outside-month)').click()
