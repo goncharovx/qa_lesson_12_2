@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from selene import browser
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 from utils import attach
 
@@ -25,6 +26,7 @@ def pytest_addoption(parser):
     parser.addoption(
         '--browser_type',
         default='chrome',
+        help='Type of browser: chrome or firefox',
     )
 
 @pytest.fixture(scope="session", autouse=True)
@@ -38,23 +40,37 @@ def open_browser(request):
     browser_version = request.config.getoption('browser_version') or DEFAULT_BROWSER_VERSION
     browser_type = request.config.getoption('browser_type')
 
-    options = Options()
-    selenoid_capabilities = {
-        "browserName": browser_type,
-        "browserVersion": browser_version,
-        "selenoid:options": {
-            "enableVNC": True,
-            "enableVideo": True
-        }
-    }
-    options.capabilities.update(selenoid_capabilities)
-
     selenoid_login = os.getenv("SELENOID_LOGIN")
     selenoid_pass = os.getenv("SELENOID_PASS")
     selenoid_url = os.getenv("SELENOID_URL")
 
     if not selenoid_login or not selenoid_pass or not selenoid_url:
         raise ValueError("Переменные окружения SELENOID_LOGIN, SELENOID_PASS или SELENOID_URL не заданы!")
+
+    if browser_type == 'chrome':
+        options = Options()
+        selenoid_capabilities = {
+            "browserName": "chrome",
+            "browserVersion": browser_version,
+            "selenoid:options": {
+                "enableVNC": True,
+                "enableVideo": True
+            }
+        }
+        options.capabilities.update(selenoid_capabilities)
+    elif browser_type == 'firefox':
+        options = FirefoxOptions()
+        selenoid_capabilities = {
+            "browserName": "firefox",
+            "browserVersion": browser_version,
+            "selenoid:options": {
+                "enableVNC": True,
+                "enableVideo": True
+            }
+        }
+        options.set_capability('moz:firefoxOptions', selenoid_capabilities)
+    else:
+        raise ValueError(f"Unsupported browser type: {browser_type}")
 
     driver = webdriver.Remote(
         command_executor=f"https://{selenoid_login}:{selenoid_pass}@{selenoid_url}/wd/hub",
@@ -63,11 +79,6 @@ def open_browser(request):
     )
 
     browser.config.driver = driver
-
-    driver_options = webdriver.ChromeOptions()
-    driver_options.page_load_strategy = 'eager'
-    driver_options.add_argument('--ignore-certificate-errors')
-    browser.config.driver_options = driver_options
 
     browser.config.window_width = 1280
     browser.config.window_height = 724
