@@ -2,6 +2,7 @@ import os
 import allure
 from allure_commons.types import AttachmentType
 
+
 def add_screenshot(browser):
     png = browser.driver.get_screenshot_as_png()
     allure.attach(
@@ -11,14 +12,22 @@ def add_screenshot(browser):
         extension=".png"
     )
 
+
 def add_logs(browser):
-    logs = "".join(f"{entry['level']}: {entry['message']}\n" for entry in browser.driver.get_log("browser"))
-    allure.attach(
-        logs,
-        name="browser_logs",
-        attachment_type=AttachmentType.TEXT,
-        extension=".log"
-    )
+    try:
+        if "firefox" in browser.driver.capabilities["browserName"].lower():
+            print("Логи браузера не поддерживаются для Firefox.")
+            return
+        logs = "".join(f"{entry['level']}: {entry['message']}\n" for entry in browser.driver.get_log("browser"))
+        allure.attach(
+            logs,
+            name="browser_logs",
+            attachment_type=AttachmentType.TEXT,
+            extension=".log"
+        )
+    except Exception as e:
+        print(f"Ошибка при добавлении логов браузера: {e}")
+
 
 def add_html(browser):
     html = browser.driver.page_source
@@ -28,6 +37,7 @@ def add_html(browser):
         attachment_type=AttachmentType.HTML,
         extension=".html"
     )
+
 
 def add_video(browser):
     video_url = f"https://{os.getenv('SELENOID_URL')}/video/{browser.driver.session_id}.mp4"
