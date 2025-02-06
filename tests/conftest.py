@@ -23,12 +23,10 @@ def pytest_addoption(parser):
     parser.addoption(
         '--browser_version',
         default=DEFAULT_BROWSER_VERSION,
-        help='Version of the browser to use',
     )
     parser.addoption(
         '--browser_type',
         default='chrome',
-        help='Type of browser: chrome or firefox',
     )
 
 
