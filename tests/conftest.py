@@ -18,6 +18,7 @@ load_dotenv(env_path)
 
 DEFAULT_BROWSER_VERSION = "126.0"
 
+
 def pytest_addoption(parser):
     parser.addoption(
         '--browser_version',
@@ -30,10 +31,12 @@ def pytest_addoption(parser):
         help='Type of browser: chrome or firefox',
     )
 
+
 @pytest.fixture(scope="session", autouse=True)
 def load_env():
     """Фикстура для загрузки переменных окружения"""
     load_dotenv(env_path)
+
 
 @pytest.fixture(scope='function', autouse=True)
 def open_browser(request):
@@ -61,17 +64,12 @@ def open_browser(request):
         options.capabilities.update(selenoid_capabilities)
     elif browser_type == 'firefox':
         options = FirefoxOptions()
-        selenoid_capabilities = {
-            "browserName": "firefox",
-            "browserVersion": browser_version,
-            "selenoid:options": {
-                "enableVNC": True,
-                "enableVideo": True
-            }
-        }
         options.set_capability("browserName", "firefox")
         options.set_capability("browserVersion", browser_version)
-        options.set_capability("selenoid:options", selenoid_capabilities["selenoid:options"])
+        options.set_capability("selenoid:options", {
+            "enableVNC": True,
+            "enableVideo": True
+        })
     else:
         raise ValueError(f"Unsupported browser type: {browser_type}")
 
@@ -89,8 +87,10 @@ def open_browser(request):
 
     yield browser
 
+    if browser_type == 'chrome':
+        attach.add_logs(browser)
+
     attach.add_screenshot(browser)
-    attach.add_logs(browser)
     attach.add_html(browser)
     attach.add_video(browser)
 
