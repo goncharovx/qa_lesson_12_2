@@ -1,39 +1,3 @@
-import os
-
-import pytest
-from dotenv import load_dotenv
-from selene import browser
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-
-from utils import attach
-
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
-
-if not os.path.exists(env_path):
-    raise FileNotFoundError(f"Файл .env не найден по пути: {env_path}")
-
-load_dotenv(env_path)
-
-DEFAULT_BROWSER_VERSION = "126.0"
-
-def pytest_addoption(parser):
-    parser.addoption(
-        '--browser_version',
-        default=DEFAULT_BROWSER_VERSION,
-    )
-    parser.addoption(
-        '--browser_type',
-        default='chrome',
-        help='Type of browser: chrome or firefox',
-    )
-
-@pytest.fixture(scope="session", autouse=True)
-def load_env():
-    """Фикстура для загрузки переменных окружения"""
-    load_dotenv(env_path)
-
 @pytest.fixture(scope='function', autouse=True)
 def open_browser(request):
     """Фикстура для открытия браузера перед тестом"""
@@ -68,7 +32,9 @@ def open_browser(request):
                 "enableVideo": True
             }
         }
-        options.set_capability('moz:firefoxOptions', selenoid_capabilities)
+        options.set_capability("browserName", "firefox")
+        options.set_capability("browserVersion", browser_version)
+        options.set_capability("selenoid:options", selenoid_capabilities["selenoid:options"])
     else:
         raise ValueError(f"Unsupported browser type: {browser_type}")
 
